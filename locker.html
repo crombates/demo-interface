@@ -1,0 +1,290 @@
+<html>
+
+<head>
+	<title>Locker simulator</title>
+	<script type="text/javascript">
+	function loadpage(){
+		var urlParams = new URLSearchParams(window.location.search);
+		var type=urlParams.get('type');
+		if(type!=="courier" && type!=="customer"){
+			
+		}
+		var lockerId=urlParams.get('id');
+		
+        form["lockerId"].value=lockerId;
+        
+		var xhr = new XMLHttpRequest();
+		//var target="/v1/deliveries/"+id;
+		var server="http://locker-manager.idjefjansenocp4-6-55ecac9755a107b11bc24a8c4d2d9236-0000.eu-de.containers.appdomain.cloud";
+		var target=server+"/v1/boxes?delivery_id="+id;
+        xhr.open("GET", target, true);
+        xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+        xhr.setRequestHeader('user_key', '88ed258ce51fafb570df4d1f539766dc');
+		
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4) {
+				if(xhr.status === 200) {
+					//Extract lockerId from first entry (will be same for all entries for a specific reservation)
+					var lockerId=xhr.response[0].lockerId;
+					form["lockerId"].value=lockerId;
+					var i=0;
+					var bx = document.getElementById('boxes');
+					while(xhr.response[i]){	
+						bx.options.add(new Option(xhr.response[i].id, xhr.response[i].id))
+						i++;
+					}
+					//var =;
+					//document.getElementById("response").innerHTML = "API "+ xhr.response.api + " " + xhr.response.apiversion + " was created in product " + xhr.response.product + " "  + xhr.response.productversion;
+				}else{
+				//Use mock values
+				var i=0;
+				var bx = document.getElementById('boxes');
+				bx.options.add(new Option("MOCK VALUES", "0"))
+					
+				var response = [
+      {
+      "id": "4",
+      "lockerId": "1",
+      "status": "FREE"
+   },
+      {
+      "id": "5",
+      "lockerId": "1",
+      "status": "FREE"
+   },
+      {
+      "id": "6",
+      "lockerId": "1",
+      "status": "FREE"
+   },
+      {
+      "id": "7",
+      "lockerId": "1",
+      "status": "FREE"
+   },
+      {
+      "id": "8",
+      "lockerId": "1",
+      "status": "FREE"
+   },
+      {
+      "id": "9",
+      "lockerId": "1",
+      "status": "FREE"
+   },
+      {
+      "id": "10",
+      "lockerId": "1",
+      "status": "FREE"
+   },
+      {
+      "id": "1",
+      "lockerId": "1",
+      "status": "RESERVED"
+   },
+      {
+      "id": "3",
+      "lockerId": "1",
+      "status": "RESERVED"
+   },
+      {
+      "id": "2",
+      "lockerId": "1",
+      "status": "LOCKED"
+   }
+]
+				//Extract lockerId from first entry (will be same for all entries for a specific reservation)
+				var lockerId=response[0].lockerId;
+				form["lockerId"].value=lockerId;
+				while(response[i]){
+					if(response[i].status==="FREE"){
+					bx.options.add(new Option(response[i].id+" - "+response[i].status, response[i].id))
+					}
+					i++;
+				}
+				
+				
+				//document.getElementById("response").innerHTML = xhr.response;
+				//alert(response);
+				}
+			}
+		}
+        xhr.send();
+		
+//	var boxes=
+	}
+	</script>
+</head>
+<!--
+Eerst een get doen van de delivery met de id, vervolgens alle velden aangevuld met boxId doorsturen naar API
+-->
+<!--
+var urlParams = new URLSearchParams(window.location.search);
+console.log(urlParams.has('post')); // true
+console.log(urlParams.get('action')); // "edit"
+console.log(urlParams.getAll('action')); // ["edit"]
+console.log(urlParams.toString()); // "?post=1234&action=edit"
+console.log(urlParams.append('active', '1')); // "?
+
+
+-->
+<body>
+<p><img id="lockerpic" src="images/closed.png"/></p>
+<div id="control">
+<p>Enter/Scan the delivery id and enter your access code:</p>
+<form action="#" method="put" id="form">
+Delivery Id: <input type="text" name="deliveryId"/><br/>
+LID=<input type="text" name="lockerId" value="1"/><br/>
+BID=<input type="text" name="boxId" value="1"/></br>
+TYPE=<input type="text" name="type"/><br/>
+Access code: <input type="text" name="code" oninput="checkdelivery()"/><br/>
+<!--Mobile: <input type="tel" name="mobile"/><br/>-->
+<input type="button" name="OpenBox" onclick="openbox()" value="Open box"/> 
+</form>
+</div>
+<div id="response"/>
+<script type="text/javascript">	
+	function checkdelivery(){
+		var form = document.getElementById('form');
+		var deliveryId=form["deliveryId"].value;
+		var boxId=form["boxId"].value;
+		var lockerId=form["lockerId"].value;
+		if(deliveryId.length > 0 && boxId.length > 0 && lockerId.length > 0){
+			//Continue, the delivery was found and filled in
+		}else{
+			if(deliveryId.length===0){
+				alert('Please enter the delivery id first');
+			}else{
+				//Retrieve delivery information
+				var xhr = new XMLHttpRequest();
+				var server="http://locker-manager.idjefjansenocp4-6-55ecac9755a107b11bc24a8c4d2d9236-0000.eu-de.containers.appdomain.cloud";
+				var target=server+"/v1/deliveries/"+deliveryId;
+				xhr.open('GET', target, true);
+				xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+				xhr.setRequestHeader('user_key', '88ed258ce51fafb570df4d1f539766dc');
+        
+				xhr.onreadystatechange = function() {
+				if (xhr.readyState === 4) {
+					if(xhr.status === 200) {
+						var lockerId=xhr.response.lockerId;
+						var boxId=xhr.response.boxId;						
+						var status=xhr.response.status;
+						form["lockerId"].value=lockerId;
+						form["boxId"].value=boxId;
+						if(status==="delivered"){
+							form["type"].value="customer";
+						}else{
+							form["type"].value="courier";
+						}
+					}else{
+						alert("Delivery not found, please check the delivery ID");						
+						}
+					}
+				}
+        xhr.send();
+			}
+		}
+	}
+    function openbox(){
+	    var xhr = new XMLHttpRequest();
+		var form = document.getElementById('form');
+		var server="http://locker-manager.idjefjansenocp4-6-55ecac9755a107b11bc24a8c4d2d9236-0000.eu-de.containers.appdomain.cloud";
+		var target=server+"/v1/deliveries/"+form["deliveryId"].value+"/deliver";
+        xhr.open(form.method, target, true);
+        xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+        xhr.setRequestHeader('user_key', '88ed258ce51fafb570df4d1f539766dc');
+		var deliveryId=form["deliveryId"].value;
+		var lockerId=form["lockerId"].value;
+		var boxId=form["boxId"].value;		
+        var j = {
+	"id": deliveryId,
+	"status": "delivered",
+	"lockerId": lockerId,
+	"boxId": boxId
+};
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4) {
+				if(xhr.status === 200) {
+					var lockerpic=document.getElementById("lockerpic");
+					lockerpic.src="images/delivery.png";
+					//form.style.display="none";
+					document.getElementById("control").innerHTML = "Put the package in the box and click below to close the box:<br/><input type=\"button\" name=\"CloseBox\" onclick=\"closebox("+lockerId+","+boxId+")\" value=\"Close box\"/>";
+				}else{
+				
+					var lockerpic=document.getElementById("lockerpic");
+					lockerpic.src="images/delivery.png";
+					//document.getElementById("control").innerHTML = "Unlocking the box failed";
+					document.getElementById("control").innerHTML = "Put the package in the box and click below to close the box:<br/><input type=\"button\" name=\"CloseBox\" onclick=\"closebox("+lockerId+","+boxId+")\" value=\"Close box\"/>";
+
+				//alert(xhr.response);
+				}
+			}
+		}
+        xhr.send(JSON.stringify(j));
+		
+	}
+	function closebox(lid, bid){
+	    var xhr = new XMLHttpRequest();
+		var form = document.getElementById('form');
+		var server="http://locker-manager.idjefjansenocp4-6-55ecac9755a107b11bc24a8c4d2d9236-0000.eu-de.containers.appdomain.cloud";
+		var target=server+"/v1/lockers/"+lid+"/boxes/"+bid+"/close";
+        xhr.open("PUT", target, true);
+        xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+        xhr.setRequestHeader('user_key', '88ed258ce51fafb570df4d1f539766dc');
+        var j = {
+	"action": "close"
+};
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4) {
+				if(xhr.status === 200) {
+					var lockerpic=document.getElementById("lockerpic");
+					lockerpic.src="images/closed.png";
+					//form.style.display="none";
+					document.getElementById("control").innerHTML = "Thank you for the delivery, have a very nice day!";
+				}else{
+					var lockerpic=document.getElementById("lockerpic");
+					lockerpic.src="images/closed.png";
+					//form.style.display="none";
+					document.getElementById("control").innerHTML = "Thank you for the delivery, have a nice day!";
+					//alert(xhr.response);
+				}
+			}
+		}
+        xhr.send(JSON.stringify(j));
+		
+	}
+    function submitform(){
+        var xhr = new XMLHttpRequest();
+		var form = document.getElementById('form');
+		var server="http://locker-manager.idjefjansenocp4-6-55ecac9755a107b11bc24a8c4d2d9236-0000.eu-de.containers.appdomain.cloud";
+		var target=server+"/v1/deliveries/"+form["deliveryId"].value+"/reserve";
+        xhr.open(form.method, target, true);
+        xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+        xhr.setRequestHeader('user_key', '88ed258ce51fafb570df4d1f539766dc');
+		var deliveryId=form["deliveryId"].value;
+		var lockerId=form["lockerId"].value;
+		var boxId=form["boxId"].value;		
+        var j = {
+	"id": deliveryId,
+	"status": "reserved",
+	"lockerId": lockerId,
+	"boxId": boxId
+};
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4) {
+				if(xhr.status === 200) {
+					form.style.display="none";
+					document.getElementById("response").innerHTML = "Reservation succesful. You can depose the package in locker "+xhr.response.lockerId+", box "+xhr.response.boxId+" with access code "+xhr.response.courierCode;
+				}else{
+				form.style.display="none";
+				document.getElementById("response").innerHTML = "Reservation failed";
+				alert(xhr.response);
+				}
+			}
+		}
+        xhr.send(JSON.stringify(j));
+		
+		}
+</script>
+</body>
+</html>

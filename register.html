@@ -1,0 +1,157 @@
+<html>
+
+<head>
+	<title>Request locker delivery</title>
+	<script type="text/javascript">
+	function loadlockers(){
+		var xhr = new XMLHttpRequest();
+		//var target="/v1/deliveries/"+id;
+		var server="http://locker-manager.idjefjansenocp4-6-55ecac9755a107b11bc24a8c4d2d9236-0000.eu-de.containers.appdomain.cloud";
+		var target=server+"/v1/lockers";
+        xhr.open("GET", target, true);
+        xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+        //xhr.setRequestHeader('X-IBM-Client-Id', '280ce174-633d-467e-b942-2b345de930c3');
+		
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4) {
+				if(xhr.status === 200) {
+					var i=0;
+					var bx = document.getElementById('lockers');
+					var response=JSON.parse(xhr.response);
+					while(response[i]){	
+						bx.options.add(new Option(response[i].description+" - "+response[i].status, response[i].id))
+						i++;
+					}
+					//var =;
+					//document.getElementById("response").innerHTML = "API "+ xhr.response.api + " " + xhr.response.apiversion + " was created in product " + xhr.response.product + " "  + xhr.response.productversion;
+				}else{
+				//Use mock values
+				var i=0;
+				var bx = document.getElementById('lockers');
+				bx.options.add(new Option("MOCK VALUES", "0"))
+					
+				var response = [{
+	"id": "1",
+	"status": "AVAILABLE",
+	"location": "50.85045, 4.34878",
+	"description": "locker 1"
+}, {
+	"id": "2",
+	"status": "AVAILABLE",
+	"location": "50.80045,4.35878 ",
+	"description": "locker 2"
+}]
+				//Extract lockerId from first entry (will be same for all entries for a specific reservation)
+				while(response[i]){
+					if(response[i].status==="AVAILABLE"){
+					bx.options.add(new Option(response[i].description+" - "+response[i].status, response[i].id))
+					}
+					i++;
+				}
+				
+				
+				//document.getElementById("response").innerHTML = xhr.response;
+				//alert(response);
+				}
+			}
+		}
+        xhr.send();
+		
+//	var boxes=
+	}
+	</script>
+</head>
+
+<body onload="loadlockers()">
+<h1>Request locker delivery</h1>
+<p><img src="images/logo.png"/></p>
+<div id="response">Register your package with your e-mailaddress and select your locker of choice from the following list of lockers.</div>
+<form action="/v1/deliveries" method="post" id="form">
+Your name: <input type="text" name="name"/><br/>
+E-mail: <input type="email" name="email"/> <!--input type="button" name="Create account" value="Create account" onclick="registerReceiver()"/--><br/>
+Your id: <input type="text" name="receiverId"/><br/>
+<!--Mobile: <input type="tel" name="mobile"/><br/>-->
+Locker: <select name="lockerId" id="lockers"><option>Select locker</option></select><br/>
+<input type="button" name="Register" value="Register" onclick="submitform()"/> 
+</form>
+
+<script type="text/javascript">
+	function registerReceiver(){
+		var xhr = new XMLHttpRequest();
+		var form = document.getElementById('form');
+        var server="http://locker-manager.idjefjansenocp4-6-55ecac9755a107b11bc24a8c4d2d9236-0000.eu-de.containers.appdomain.cloud";
+		var target=server+"/v1/receivers";
+        xhr.open("POST", target, true);
+        xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+        xhr.setRequestHeader('user_key', '88ed258ce51fafb570df4d1f539766dc');		
+		var name=form["name"].value;
+		var email=form["email"].value;
+        var j = {
+	"email": email,
+	"mobile": "",
+	"name": name,
+	"type": "customer"
+};
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4) {
+				if(xhr.status === 201) {					
+					form["receiverId"].value=xhr.response.id;
+					form["name"].type="hidden";
+				}else{
+					//MOCK
+					var response={
+    "id": "1MOCK",
+    "name": "Mock",
+    "email": "some text",
+    "mobile": "some text",
+    "type": "customer"
+};
+					form["receiverId"].value=response.id;
+				}
+			}
+		}
+        xhr.send(JSON.stringify(j));
+	}
+    function submitform(){
+        var xhr = new XMLHttpRequest();
+		var form = document.getElementById('form');
+        var server="http://locker-manager.idjefjansenocp4-6-55ecac9755a107b11bc24a8c4d2d9236-0000.eu-de.containers.appdomain.cloud";
+		var target=server+"/v1/deliveries";
+		xhr.open(form.method, target, true);
+        xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+        xhr.setRequestHeader('user_key', '88ed258ce51fafb570df4d1f539766dc');
+		var lockerId=form["lockerId"].value;
+		var rcvId=form["receiverId"].value;
+		var email=form["email"].value;
+        var j = {
+	"lockerId": lockerId,
+	"receiverId": rcvId,
+	"receiverMail": email,
+	"receiverMobile": ""
+};
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4) {
+				if(xhr.status === 200) {
+					form.style.display="none";
+					//{"deliveryId": 30}
+					var response=JSON.parse(xhr.response);
+					var deliveryId=response.deliveryId;
+					document.getElementById("response").innerHTML = "Your delivery is scheduled for pickup. You can track it with this id: "+deliveryId;
+					//document.getElementById("response").innerHTML = "API "+ xhr.response.api + " " + xhr.response.apiversion + " was created in product " + xhr.response.product + " "  + xhr.response.productversion;
+				}else{
+					form.style.display="none";
+					var response={"deliveryId": 30};
+					var deliveryId=response.deliveryId;
+					document.getElementById("response").innerHTML = "MOCK:Your delivery is scheduled for pickup. You can track it with this id: "+deliveryId;
+					document.getElementById("response").innerHTML = "Something went wrong, your delivery was not registered";
+				//document.getElementById("response").innerHTML = xhr.response;
+				//alert(xhr.response);
+				}
+			}
+		}
+        xhr.send(JSON.stringify(j));
+		
+		}
+</script>
+</body>
+</html>
