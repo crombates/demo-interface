@@ -133,9 +133,9 @@ console.log(urlParams.append('active', '1')); // "?
 <div id="control">
 <p>Enter/Scan the delivery id and enter your access code:</p>
 <form action="#" method="put" id="form">
-Delivery Id: <input type="text" name="deliveryId"/><br/>
-LID=<input type="text" name="lockerId" value="1"/><br/>
-BID=<input type="text" name="boxId" value="1"/></br>
+Delivery Id: <input type="text" name="deliveryId" onchange="checkdelivery()"/><br/>
+LID=<input type="text" name="lockerId"/><br/>
+BID=<input type="text" name="boxId"/></br>
 TYPE=<input type="text" name="type"/><br/>
 Access code: <input type="text" name="code" oninput="checkdelivery()"/><br/>
 <!--Mobile: <input type="tel" name="mobile"/><br/>-->
